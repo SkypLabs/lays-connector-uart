@@ -1,0 +1,4 @@
+pika==0.10.0
+pyserial
+hdlcontroller
+fysom
