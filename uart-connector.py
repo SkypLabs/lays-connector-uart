@@ -21,9 +21,9 @@ amqp_dc_channel = None
 
 # Serial port configuration
 ser = serial.Serial()
-ser.port = '/dev/pts/5'
-ser.baudrate = 9600
-ser.timeout = 0
+ser.port = getenv('LAYS_SERIAL_PORT', '/dev/ttyACM0')
+ser.baudrate = int(getenv('LAYS_SERIAL_BAUDRATE', '9600'))
+ser.timeout = int(getenv('LAYS_SERIAL_TIMEOUT', '0'))
 
 # Device resources
 device_resources = dict()
