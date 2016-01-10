@@ -1,0 +1,17 @@
+FROM docker.io/debian:jessie
+MAINTAINER skyper@skyplabs.net
+
+RUN apt-get update \
+	&& apt-get install -y python3 python3-pip \
+	&& mkdir -p /usr/src/app
+
+COPY requirements.txt /tmp/
+
+RUN pip3 install -r /tmp/requirements.txt \
+	&& rm -f /tmp/requirements.txt
+
+COPY uart-connector.py /usr/src/app/
+COPY uart_protocol.py /usr/src/app/
+
+WORKDIR /usr/src/app
+CMD ["python3", "-u", "uart-connector.py"]
