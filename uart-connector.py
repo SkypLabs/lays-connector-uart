@@ -125,29 +125,34 @@ def wait_for_resources(e):
 			stdout.write('[*] Discovery stopped\n')
 			break
 		elif command == RESOURCE:
-			resource_address = payload[0]
-			resource_config = payload[1]
+			try:
+				resource_address = payload[0]
+				resource_config = payload[1]
 
-			resource_mode, resource_type, resource_dimension = decode_resource_config(resource_config)
+				resource_mode, resource_type, resource_dimension = decode_resource_config(resource_config)
 
-			resource = dict()
-			resource['address'] = resource_address
-			resource['mode'] = resource_mode
-			resource['type'] = resource_type
-			resource['dimension'] = resource_dimension
+				resource = dict()
+				resource['address'] = resource_address
+				resource['mode'] = resource_mode
+				resource['type'] = resource_type
+				resource['dimension'] = resource_dimension
 
-			if resource_type == 'ms':
-				resource['unit'] = payload[2]
+				if resource_type == 'ms':
+					resource['unit'] = payload[2]
 
-			device_resources['resources'].append(resource)
+				device_resources['resources'].append(resource)
 
-			stdout.write('[*] New resource at @{0}: {1}; {2}; {3} \n'.format(
-					resource_address,
-					resource_mode,
-					resource_type,
-					resource_dimension
+				stdout.write('[*] New resource at @{0}: {1}; {2}; {3} \n'.format(
+						resource_address,
+						resource_mode,
+						resource_type,
+						resource_dimension
+					)
 				)
-			)
+			except ValueError:
+				stderr.write('[x] Bad resource configuration\n')
+			except IndexError:
+				stderr.write('[x] Bad resource payload\n')
 		else:
 			pass
 
