@@ -108,9 +108,12 @@ def start_discovery(e):
 		command, payload = decode_packet(packet)
 
 		if command == UUID:
-			device_resources['uuid'] = str(uuid.UUID(bytes=payload))
-			stdout.write('[*] Device UUID received : {0}\n'.format(device_resources['uuid']))
-			break
+			try:
+				device_resources['uuid'] = str(uuid.UUID(bytes=payload))
+				stdout.write('[*] Device UUID received : {0}\n'.format(device_resources['uuid']))
+				break
+			except ValueError:
+				stderr.write('[x] Bad UUID\n')
 
 	e.fsm.uuid_received()
 
