@@ -128,9 +128,7 @@ def wait_for_resources(e):
 			resource_address = payload[0]
 			resource_config = payload[1]
 
-			resource_mode = None
-			resource_type = None
-			resource_dimension = None
+			resource_mode, resource_type, resource_dimension = decode_resource_config(resource_config)
 
 			resource = dict()
 			resource['address'] = resource_address
@@ -138,7 +136,18 @@ def wait_for_resources(e):
 			resource['type'] = resource_type
 			resource['dimension'] = resource_dimension
 
+			if resource_type == 'ms':
+				resource['unit'] = payload[2]
+
 			device_resources['resources'].append(resource)
+
+			stdout.write('[*] New resource at @{0}: {1}; {2}; {3} \n'.format(
+					resource_address,
+					resource_mode,
+					resource_type,
+					resource_dimension
+				)
+			)
 		else:
 			pass
 
