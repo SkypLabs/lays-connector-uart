@@ -64,6 +64,18 @@ def declare_resources(resources):
 		),
 	)
 
+def declare_values(values):
+	message = json.dumps(values)
+
+	amqp_rd_channel.basic_publish(
+		exchange='',
+		routing_key='data-collector',
+		body=message,
+		properties=pika.BasicProperties(
+			delivery_mode=2
+		),
+	)
+
 def serial_connection(e):
 	stdout.write('[*] Connection to serial bus ({0}) ...\n'.format(ser.port))
 
@@ -177,7 +189,52 @@ def stop_discovery(e):
 	e.fsm.ready()
 
 def wait_for_data(e):
+	def get_resource(address):
+		for i, resource in enumerate(device_resources['resources']):
+			if resource['address'] == address:
+				return i
+		raise ValueError
+
 	stdout.write('[*] Waiting for data ...\n')
+
+	while True:
+		packet = hdlc_c.get_data()
+		command, payload = decode_packet(packet)
+
+		if command == RESOURCE_VALUE:
+			try:
+				resource_address = payload[0]
+				index = get_resource(resource_address)
+				resource_dimension = device_resources['resources'][index]['dimension']
+
+				device_data = dict()
+				device_data['uuid'] = device_resources['uuid']
+				device_data['data'] = list()
+
+				data_value = dict()
+				data_value['address'] = resource_address
+
+				if resource_dimension == 'bl':
+					data_value['value'] = unpack('?', payload[1].to_bytes(1, 'big'))[0]
+				elif resource_dimension == 'pc':
+					data_value['value'] = unpack('f', payload[1:5])[0]
+
+					if data_value['value'] > 100.0:
+						data_value['value'] = 100.0
+					elif data_value['value'] < 0.0:
+						data_value['value'] = 0.0
+				elif resource_dimension == 'vl':
+					data_value['value'] = unpack('f', payload[1:5])[0]
+
+				device_data['data'].append(data_value)
+				declare_values(device_data)
+
+			except IndexError:
+				stderr.write('[x] Bad resource value payload\n')
+			except ValueError:
+				stderr.write('[x] Unknown resource address\n')
+		else:
+			pass
 
 try:
 	fsm = Fysom({
